@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<AssemblyName>MailVerifierStandard</AssemblyName>
+		<RootNamespace>MailVerifier</RootNamespace>
+		<Authors>Janos Erdelyi</Authors>
+		<Description>Library for verifying mailer domains</Description>
+		<Version>0.2.0</Version>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="DNS" Version="5.0.0"/>
+	</ItemGroup>
+</Project>
