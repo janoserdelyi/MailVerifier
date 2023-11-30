@@ -1,12 +1,33 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<AssemblyName>MailVerifierStandard</AssemblyName>
+		<AssemblyName>MailVerifier</AssemblyName>
 		<RootNamespace>MailVerifier</RootNamespace>
 		<Authors>Janos Erdelyi</Authors>
 		<Description>Library for verifying mailer domains</Description>
 		<Version>0.2.0</Version>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<PackageId>com.janoserdelyi.MailVerifier</PackageId>
+		<Authors>Janos Erdelyi</Authors>
+		<Company>Janos Erdelyi</Company>
+		<Product>MailVerifier</Product>
+		<AssemblyName>MailVerifier</AssemblyName>
+		<!-- for packaging -->
+		<EnablePackageValidation>true</EnablePackageValidation>
+    	<!-- Optional: Detect breaking changes from a previous stable version -->
+    	<!-- <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion> -->
+		<!-- automatically generate package on build -->
+		<!-- <GeneratePackageOnBuild>true</GeneratePackageOnBuild> -->
+		<!-- <PackageLicenseExpression>AGPL</PackageLicenseExpression> -->
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="../README.md" Pack="true" PackagePath="/"/>
+		<None Include="../LICENSE" Pack="true" PackagePath="/"/>
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="DNS" Version="5.0.0"/>
 	</ItemGroup>
