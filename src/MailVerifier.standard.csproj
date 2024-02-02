@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFrameworks>netstandard2.0;net6.0;net7.0</TargetFrameworks>
 		<AssemblyName>MailVerifier</AssemblyName>
 		<RootNamespace>MailVerifier</RootNamespace>
 		<Authors>Janos Erdelyi</Authors>
 		<Description>Library for verifying mailer domains</Description>
-		<Version>0.2.1</Version>
+		<Version>0.2.2</Version>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<PackageId>com.janoserdelyi.MailVerifier</PackageId>
 		<Authors>Janos Erdelyi</Authors>
