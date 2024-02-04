@@ -35,33 +35,43 @@ namespace MailVerifier
 			IList<string> mxs = new List<string> ();
 
 			foreach (string dnsIp in dnsIps) {
-				Console.ForegroundColor = ConsoleColor.DarkGray;
-				Console.WriteLine ("attempting to resolve DNS for " + domain + "... with dns server " + dnsIp);
-				Console.ResetColor ();
+				if (WriteDebugMessages) {
+					Console.ForegroundColor = ConsoleColor.DarkGray;
+					Console.WriteLine ("attempting to resolve DNS for " + domain + "... with dns server " + dnsIp);
+					Console.ResetColor ();
+				}
 
 				Task<IResponse> resp = null;
 				try {
 					resp = GetAnswersAsync (domain, RecordType.MX, dnsServer: dnsIp);
 				} catch (Exception oops) {
-					Console.WriteLine ("(MX failure against dns '" + dnsIp + "' for '" + domain + "') ");
-					Console.WriteLine (oops.ToString ());
+					if (WriteDebugMessages) {
+						Console.WriteLine ("(MX failure against dns '" + dnsIp + "' for '" + domain + "') ");
+						Console.WriteLine (oops.ToString ());
+					}
 					continue;
 				}
 
 				if (resp == null) {
-					Console.WriteLine ("(MX name failure against dns '" + dnsIp + "' for '" + domain + "') ");
+					if (WriteDebugMessages) {
+						Console.WriteLine ("(MX name failure against dns '" + dnsIp + "' for '" + domain + "') ");
+					}
 					continue;
 				}
 
 				resp.Wait ();
 
 				if (resp == null || resp.Result == null) {
-					Console.WriteLine ("(MX against dns '" + dnsIp + "' fail for '" + domain + "') ");
+					if (WriteDebugMessages) {
+						Console.WriteLine ("(MX against dns '" + dnsIp + "' fail for '" + domain + "') ");
+					}
 					continue;
 				}
 
 				if (resp.Result.ResponseCode == ResponseCode.NameError) {
-					Console.WriteLine ("(name error for '" + domain + "' with dns '" + dnsIp + "') ");
+					if (WriteDebugMessages) {
+						Console.WriteLine ("(name error for '" + domain + "' with dns '" + dnsIp + "') ");
+					}
 					continue;
 				}
 
@@ -72,8 +82,8 @@ namespace MailVerifier
 					continue;
 				}
 
-				foreach (MailExchangeResourceRecord record in records) {
-					string mx = record.ExchangeDomainName.ToString ();
+				foreach (var record in records) {
+					string mx = ((MailExchangeResourceRecord)record).ExchangeDomainName.ToString ();
 					if (string.IsNullOrEmpty (mx)) {
 						continue;
 					}
@@ -117,7 +127,7 @@ namespace MailVerifier
 			return response;
 		}
 
-		public static Response Check (
+		public static async Task<Response> Check (
 			string address,
 			int timeout = 10000
 		) {
@@ -138,11 +148,12 @@ namespace MailVerifier
 				throw new ArgumentException ("Please supply DNS ip's to use for this check");
 			}
 
-			Response resp = new Response ();
-			resp.Address = address;
-			resp.Domain = domain;
-			resp.Success = false;
-			resp.Message = "";
+			Response resp = new Response {
+				Address = address,
+				Domain = domain,
+				Success = false,
+				Message = ""
+			};
 
 			if (bypassDomains.ContainsKey (domain)) {
 				resp.Success = true;
@@ -157,43 +168,54 @@ namespace MailVerifier
 
 			bool realResponse = false;
 
-			Console.ForegroundColor = ConsoleColor.Green;
-			Console.WriteLine ("USING NEW LIBRARY");
-			Console.ResetColor ();
+			if (WriteDebugMessages) {
+				Console.ForegroundColor = ConsoleColor.Green;
+				Console.WriteLine ("USING NEW LIBRARY");
+				Console.ResetColor ();
+			}
 
 			foreach (string dnsIp in dnsIps) {
 
-				Console.ForegroundColor = ConsoleColor.DarkGray;
-				Console.WriteLine ("attempting to resolve DNS for " + domain + "... with dns server " + dnsIp);
-				Console.ResetColor ();
+				if (WriteDebugMessages) {
+					Console.ForegroundColor = ConsoleColor.DarkGray;
+					Console.WriteLine ("attempting to resolve DNS for " + domain + "... with dns server " + dnsIp);
+					Console.ResetColor ();
+				}
 
-				Task<IResponse> mxResponse = null;
+				IResponse mxResponse = null;
 				try {
-					mxResponse = GetAnswersAsync (domain, RecordType.MX, dnsServer: dnsIp);
-					mxResponse.Wait ();
+					mxResponse = await GetAnswersAsync (domain, RecordType.MX, dnsServer: dnsIp);
 				} catch (Exception oops) {
-					Console.WriteLine ("(MX against dns '" + dnsIp + "' fail for '" + domain + "') ");
-					Console.WriteLine (oops.ToString ());
+					if (WriteDebugMessages) {
+						Console.WriteLine ("(MX against dns '" + dnsIp + "' fail for '" + domain + "') ");
+						Console.WriteLine (oops.ToString ());
+					}
 					resp.Message = "Error determining MX at dns '" + dnsIp + "' for '" + domain + "'";
 					continue;
 				}
 
-				if (mxResponse == null || mxResponse.Result == null) {
-					Console.WriteLine ("(MX against dns '" + dnsIp + "' fail for '" + domain + "') ");
+				if (mxResponse == null) {
+					if (WriteDebugMessages) {
+						Console.WriteLine ("(MX against dns '" + dnsIp + "' fail for '" + domain + "') ");
+					}
 					resp.Message = "MX not found at dns '" + dnsIp + "' for '" + domain + "'";
 					continue;
 				}
 
-				if (mxResponse.Result.ResponseCode == ResponseCode.NameError) {
-					Console.WriteLine ("(name error for '" + domain + "' with dns '" + dnsIp + "') ");
+				if (mxResponse.ResponseCode == ResponseCode.NameError) {
+					if (WriteDebugMessages) {
+						Console.WriteLine ("(name error for '" + domain + "' with dns '" + dnsIp + "') ");
+					}
 					resp.Message = "name error for '" + domain + "'";
 					continue;
 				}
 
-				IList<IResourceRecord> records = mxResponse.Result.AnswerRecords;
+				IList<IResourceRecord> records = mxResponse.AnswerRecords;
 
 				if (records == null || records.Count == 0) {
-					Console.WriteLine ("(no MX records found for '" + domain + "' with dns '" + dnsIp + "') ");
+					if (WriteDebugMessages) {
+						Console.WriteLine ("(no MX records found for '" + domain + "' with dns '" + dnsIp + "') ");
+					}
 					resp.Message = "no MX records for '" + domain + "'";
 					continue;
 				}
@@ -219,25 +241,30 @@ namespace MailVerifier
 
 					mx = mx.ToLower ();
 
-					Task<IResponse> aResponse = GetAnswersAsync (mx, RecordType.A, dnsServer: dnsIp);
-					aResponse.Wait ();
+					IResponse aResponse = await GetAnswersAsync (mx, RecordType.A, dnsServer: dnsIp);
 
-					if (aResponse == null || aResponse.Result == null) {
-						Console.WriteLine ("(A against dns '" + dnsIp + "' fail for '" + domain + "') ");
+					if (aResponse == null) {
+						if (WriteDebugMessages) {
+							Console.WriteLine ("(A against dns '" + dnsIp + "' fail for '" + domain + "') ");
+						}
 						resp.Message = "A against dns '" + dnsIp + "' fail for '" + domain + "'";
 						continue;
 					}
 
-					if (aResponse.Result.ResponseCode == ResponseCode.NameError) {
-						Console.WriteLine ("(name error for '" + domain + "' with dns '" + dnsIp + "') ");
+					if (aResponse.ResponseCode == ResponseCode.NameError) {
+						if (WriteDebugMessages) {
+							Console.WriteLine ("(name error for '" + domain + "' with dns '" + dnsIp + "') ");
+						}
 						resp.Message = "name error for '" + domain + "' with dns '" + dnsIp + "'";
 						continue;
 					}
 
-					IList<IResourceRecord> aRecords = aResponse.Result.AnswerRecords;
+					IList<IResourceRecord> aRecords = aResponse.AnswerRecords;
 
 					if (records == null || records.Count == 0) {
-						Console.WriteLine ("(no A records found for '" + mx + "' with dns '" + dnsIp + "') ");
+						if (WriteDebugMessages) {
+							Console.WriteLine ("(no A records found for '" + mx + "' with dns '" + dnsIp + "') ");
+						}
 						resp.Message = "no A records found for '" + mx + "' with dns '" + dnsIp + "'";
 						continue;
 					}
@@ -256,9 +283,11 @@ namespace MailVerifier
 						}
 
 						if (bypassDomains.ContainsKey (aRecord.Name.ToString ())) {
-							Console.ForegroundColor = ConsoleColor.DarkMagenta;
-							Console.WriteLine ("MX bypass " + aRecord.Name + " used");
-							Console.ResetColor ();
+							if (WriteDebugMessages) {
+								Console.ForegroundColor = ConsoleColor.DarkMagenta;
+								Console.WriteLine ("MX bypass " + aRecord.Name + " used");
+								Console.ResetColor ();
+							}
 							resp.Success = true;
 							resp.Message = "Success";
 							return resp;
@@ -266,16 +295,18 @@ namespace MailVerifier
 
 						System.Net.IPAddress ipA = aRecord.IPAddress;
 						foreach (int smtpPort in smtpPorts) {
-							if (HasServer (ipA, smtpPort)) {
+							if (await HasServer (ipA, smtpPort, timeout)) {
 								resp.UnderlyingGoodDomain = aRecord.Name.ToString ();
 								serverVerified = true;
 
 								// 2018-11-12 constantly having to recheck crap like google's MX records because they are not the actual domain being checked
 								// i will be adding successful hits to bypass domains
 								// on long-running processes this will increase the memory footprint, but this is just slow and unnecessary as-is
-								Console.ForegroundColor = ConsoleColor.DarkMagenta;
-								Console.WriteLine ("MX " + aRecord.Name.ToString () + " added to bypass domains");
-								Console.ResetColor ();
+								if (WriteDebugMessages) {
+									Console.ForegroundColor = ConsoleColor.DarkMagenta;
+									Console.WriteLine ("MX " + aRecord.Name.ToString () + " added to bypass domains");
+									Console.ResetColor ();
+								}
 								AddBypassDomain (aRecord.Name.ToString ());
 
 								break;
@@ -284,7 +315,6 @@ namespace MailVerifier
 							}
 						}
 					}
-
 
 					if (serverVerified) {
 						break;
@@ -314,27 +344,31 @@ namespace MailVerifier
 		}
 
 		// i've run into cases where sending in a string ip address woerked by the A record hostname did not
-		public static bool HasServer (
+		public static async Task<bool> HasServer (
 			System.Net.IPAddress server,
 			int port,
 			int timeout = 10000
 		) {
 			System.Net.IPEndPoint ipend = new System.Net.IPEndPoint (server, port);
 
-			Console.ForegroundColor = ConsoleColor.DarkGreen;
-			Console.WriteLine ("attempting " + server.ToString () + ":" + port.ToString () + " with timeout " + timeout.ToString ());
-			Console.ResetColor ();
+			if (WriteDebugMessages) {
+				Console.ForegroundColor = ConsoleColor.DarkGreen;
+				Console.WriteLine ("attempting " + server.ToString () + ":" + port.ToString () + " with timeout " + timeout.ToString ());
+				Console.ResetColor ();
+			}
 
 			bool ret = false;
 
-			System.Net.Sockets.TcpClient sock = null;
+			System.Net.Sockets.TcpClient sock;
 			try {
 				sock = new System.Net.Sockets.TcpClient (ipend.Address.ToString (), ipend.Port);
 			} catch (Exception oops) {
-				Console.ForegroundColor = ConsoleColor.DarkGray;
-				Console.WriteLine ("unable to create socket at " + ipend.ToString ());
-				Console.WriteLine ("reason : " + oops.ToString ());
-				Console.ResetColor ();
+				if (WriteDebugMessages) {
+					Console.ForegroundColor = ConsoleColor.DarkGray;
+					Console.WriteLine ("unable to create socket at " + ipend.ToString ());
+					Console.WriteLine ("reason : " + oops.ToString ());
+					Console.ResetColor ();
+				}
 				return ret;
 			}
 			//2010 05 23 janos
@@ -348,23 +382,29 @@ namespace MailVerifier
 				// for some reason a random human time here while debugging typically means a failure gets a successful response
 				Random random = new Random (DateTime.Now.Second);
 				int waitrand = random.Next (2000, 8000);
-				Console.WriteLine ("waiting " + waitrand.ToString () + "ms to read bytes from server");
+				if (WriteDebugMessages) {
+					Console.WriteLine ("waiting " + waitrand.ToString () + "ms to read bytes from server");
+				}
 				System.Threading.Thread.Sleep (waitrand);
 
 				try {
-					int recv = ns.Read (data, 0, data.Length);
+					int recv = await ns.ReadAsync (data, 0, data.Length);
 					string asciidata = System.Text.ASCIIEncoding.ASCII.GetString (data);
 					Console.WriteLine ("Data received : " + asciidata);
 					if (!string.IsNullOrEmpty (asciidata) && asciidata.ToLower ().Contains ("connection refused")) {
-						Console.WriteLine ("connection refused! no good");
+						if (WriteDebugMessages) {
+							Console.WriteLine ("connection refused! no good");
+						}
 						return false;
 					}
 					ret = true;
 				} catch (Exception oops) {
-					Console.ForegroundColor = ConsoleColor.DarkGray;
-					Console.WriteLine ("Error getting stream : " + oops.ToString ());
-					Console.WriteLine ("-".PadRight (50, '-'));
-					Console.ResetColor ();
+					if (WriteDebugMessages) {
+						Console.ForegroundColor = ConsoleColor.DarkGray;
+						Console.WriteLine ("Error getting stream : " + oops.ToString ());
+						Console.WriteLine ("-".PadRight (50, '-'));
+						Console.ResetColor ();
+					}
 				}
 			}
 
@@ -401,8 +441,9 @@ namespace MailVerifier
 			}
 		}
 
-		private static List<string> dnsIps = new List<string> ();
-		private static Dictionary<string, int> bypassDomains = new Dictionary<string, int> (); // just using dictionary for speed if this grows
-		private static List<int> smtpPorts = new List<int> ();
+		private static readonly List<string> dnsIps = new List<string> ();
+		private static readonly Dictionary<string, int> bypassDomains = new Dictionary<string, int> (); // just using dictionary for speed if this grows
+		private static readonly List<int> smtpPorts = new List<int> ();
+		private static bool WriteDebugMessages { get; set; } = false;
 	}
 }

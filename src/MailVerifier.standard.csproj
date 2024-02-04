@@ -5,7 +5,7 @@
 		<RootNamespace>MailVerifier</RootNamespace>
 		<Authors>Janos Erdelyi</Authors>
 		<Description>Library for verifying mailer domains</Description>
-		<Version>0.2.4</Version>
+		<Version>0.3.0</Version>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<PackageId>com.janoserdelyi.MailVerifier</PackageId>
 		<Authors>Janos Erdelyi</Authors>
