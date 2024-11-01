@@ -7,10 +7,8 @@ using DNS.Client;
 using DNS.Protocol;
 using DNS.Protocol.ResourceRecords;
 
-namespace MailVerifier
-{
-	public class Verify
-	{
+namespace MailVerifier {
+	public class Verify {
 		// 2018-12-06 get mx record domains
 		public static IList<string> GetMxDomains (
 			string address
@@ -321,8 +319,8 @@ namespace MailVerifier
 					}
 				}
 
-			// likely a typo. 'yahop.com' was one that inspired this
-			crapdomain:
+// likely a typo. 'yahop.com' was one that inspired this
+crapdomain:
 
 				if (serverVerified) {
 					// get out of here. success!
@@ -411,7 +409,7 @@ namespace MailVerifier
 			return ret;
 		}
 
-		public static void AddDns (string dnsIp) {
+		public static void AddDns ( string dnsIp ) {
 			if (string.IsNullOrEmpty (dnsIp)) {
 				return;
 			}
@@ -420,7 +418,7 @@ namespace MailVerifier
 			}
 		}
 
-		public static void AddBypassDomain (string bypassDomain) {
+		public static void AddBypassDomain ( string bypassDomain ) {
 			if (string.IsNullOrEmpty (bypassDomain)) {
 				return;
 			}
@@ -444,6 +442,6 @@ namespace MailVerifier
 		private static readonly List<string> dnsIps = new List<string> ();
 		private static readonly Dictionary<string, int> bypassDomains = new Dictionary<string, int> (); // just using dictionary for speed if this grows
 		private static readonly List<int> smtpPorts = new List<int> ();
-		private static bool WriteDebugMessages { get; set; } = false;
+		public static bool WriteDebugMessages { get; set; } = false;
 	}
 }
