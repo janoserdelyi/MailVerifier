@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/MailVerifier.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MailVerifier.Tests.csproj" />
+  </Folder>
 </Solution>

@@ -14,6 +14,12 @@ public class Verify
 	public static IList<string> GetMxDomains (
 		string address
 	) {
+		return GetMxDomainsAsync (address).GetAwaiter ().GetResult ();
+	}
+
+	public static async Task<IList<string>> GetMxDomainsAsync (
+		string address
+	) {
 		ArgumentNullException.ThrowIfNull (address, "an email address is required");
 
 		if (!address.Contains ('@')) {
@@ -40,9 +46,9 @@ public class Verify
 				Console.ResetColor ();
 			}
 
-			Task<IResponse> resp = null;
+			IResponse resp = null;
 			try {
-				resp = GetAnswersAsync (domain, RecordType.MX, dnsServer: dnsIp);
+				resp = await GetAnswersAsync (domain, RecordType.MX, dnsServer: dnsIp);
 			} catch (Exception oops) {
 				if (WriteDebugMessages) {
 					Console.WriteLine ("(MX failure against dns '" + dnsIp + "' for '" + domain + "') ");
@@ -60,17 +66,7 @@ public class Verify
 				continue;
 			}
 
-			resp.Wait ();
-
-			if (resp == null || resp.Result == null) {
-				if (WriteDebugMessages) {
-					Console.WriteLine ("(MX against dns '" + dnsIp + "' fail for '" + domain + "') ");
-				}
-
-				continue;
-			}
-
-			if (resp.Result.ResponseCode == ResponseCode.NameError) {
+			if (resp.ResponseCode == ResponseCode.NameError) {
 				if (WriteDebugMessages) {
 					Console.WriteLine ("(name error for '" + domain + "' with dns '" + dnsIp + "') ");
 				}
@@ -78,7 +74,7 @@ public class Verify
 				continue;
 			}
 
-			IList<IResourceRecord> records = resp.Result.AnswerRecords;
+			IList<IResourceRecord> records = resp.AnswerRecords;
 
 			if (records == null || records.Count == 0) {
 				Console.WriteLine ("(no MX records found for '" + domain + "' with dns '" + dnsIp + "') ");
@@ -334,7 +330,7 @@ public class Verify
 				}
 			}
 
-		// likely a typo. 'yahop.com' was one that inspired this
+			// likely a typo. 'yahop.com' was one that inspired this
 		crapdomain:
 
 			if (serverVerified) {
@@ -374,7 +370,9 @@ public class Verify
 
 		System.Net.Sockets.TcpClient sock;
 		try {
-			sock = new System.Net.Sockets.TcpClient (ipend.Address.ToString (), ipend.Port);
+			sock = new System.Net.Sockets.TcpClient ();
+			using var cts = new System.Threading.CancellationTokenSource (timeout);
+			await sock.ConnectAsync (ipend, cts.Token);
 		} catch (Exception oops) {
 			if (WriteDebugMessages) {
 				Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -385,6 +383,7 @@ public class Verify
 
 			return ret;
 		}
+
 		//2010 05 23 janos
 		//satx.rr.com did not respond to the telnet within the one second timeout, presumably to slow down bots
 		//so i have increased this to 2000 from 1000
@@ -400,7 +399,7 @@ public class Verify
 				Console.WriteLine ("waiting " + waitrand.ToString (System.Globalization.CultureInfo.InvariantCulture) + "ms to read bytes from server");
 			}
 
-			System.Threading.Thread.Sleep (waitrand);
+			await Task.Delay (waitrand);
 
 			try {
 				int recv = await ns.ReadAsync (data.AsMemory ());
