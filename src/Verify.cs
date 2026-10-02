@@ -331,7 +331,6 @@ public class Verify
 				}
 			}
 
-			// likely a typo. 'yahop.com' was one that inspired this
 		crapdomain:
 
 			if (serverVerified) {
