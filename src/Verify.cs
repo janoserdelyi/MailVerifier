@@ -334,7 +334,7 @@ public class Verify
 				}
 			}
 
-		// likely a typo. 'yahop.com' was one that inspired this
+			// likely a typo. 'yahop.com' was one that inspired this
 		crapdomain:
 
 			if (serverVerified) {
@@ -374,7 +374,9 @@ public class Verify
 
 		System.Net.Sockets.TcpClient sock;
 		try {
-			sock = new System.Net.Sockets.TcpClient (ipend.Address.ToString (), ipend.Port);
+			sock = new System.Net.Sockets.TcpClient ();
+			using var cts = new System.Threading.CancellationTokenSource (timeout);
+			await sock.ConnectAsync (ipend, cts.Token);
 		} catch (Exception oops) {
 			if (WriteDebugMessages) {
 				Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -385,6 +387,7 @@ public class Verify
 
 			return ret;
 		}
+
 		//2010 05 23 janos
 		//satx.rr.com did not respond to the telnet within the one second timeout, presumably to slow down bots
 		//so i have increased this to 2000 from 1000
