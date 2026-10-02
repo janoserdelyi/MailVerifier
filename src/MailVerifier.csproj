@@ -5,7 +5,7 @@
 		<RootNamespace>MailVerifier</RootNamespace>
 		<Authors>Janos Erdelyi</Authors>
 		<Description>Library for verifying mailer domains</Description>
-		<Version>0.5.0</Version>
+		<Version>0.6.0</Version>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<PackageId>com.janoserdelyi.MailVerifier</PackageId>
 		<Authors>Janos Erdelyi</Authors>
@@ -14,8 +14,6 @@
 		<AssemblyName>MailVerifier</AssemblyName>
 		<!-- for packaging -->
 		<EnablePackageValidation>true</EnablePackageValidation>
-    	<!-- Optional: Detect breaking changes from a previous stable version -->
-    	<!-- <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion> -->
 		<!-- automatically generate package on build -->
 		<!-- <GeneratePackageOnBuild>true</GeneratePackageOnBuild> -->
 		<!-- <PackageLicenseExpression>AGPL</PackageLicenseExpression> -->

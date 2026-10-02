@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 using System.Threading.Tasks;
@@ -33,13 +34,13 @@ public class Verify
 		address = address.ToLowerInvariant ().Trim ();
 		string domain = address.Split ('@')[1];
 
-		if (_dnsIps.Count == 0) {
+		if (_dnsIps.IsEmpty) {
 			throw new ArgumentException ("Please supply DNS ip's to use for this check");
 		}
 
 		var mxs = new List<string> ();
 
-		foreach (string dnsIp in _dnsIps) {
+		foreach (string dnsIp in _dnsIps.Keys) {
 			if (WriteDebugMessages) {
 				Console.ForegroundColor = ConsoleColor.DarkGray;
 				Console.WriteLine ("attempting to resolve DNS for " + domain + "... with dns server " + dnsIp);
@@ -144,7 +145,7 @@ public class Verify
 		address = address.ToLowerInvariant ().Trim ();
 		string domain = address.Split ('@')[1];
 
-		if (_dnsIps.Count == 0) {
+		if (_dnsIps.IsEmpty) {
 			throw new ArgumentException ("Please supply DNS ip's to use for this check");
 		}
 
@@ -161,9 +162,9 @@ public class Verify
 			return resp;
 		}
 
-		if (_smtpPorts.Count == 0) {
-			_smtpPorts.Add (25);
-			_smtpPorts.Add (587);
+		if (_smtpPorts.IsEmpty) {
+			_smtpPorts.TryAdd (25, 0);
+			_smtpPorts.TryAdd (587, 0);
 		}
 
 		bool realResponse = false;
@@ -174,7 +175,7 @@ public class Verify
 			Console.ResetColor ();
 		}
 
-		foreach (string dnsIp in _dnsIps) {
+		foreach (string dnsIp in _dnsIps.Keys) {
 
 			if (WriteDebugMessages) {
 				Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -302,7 +303,7 @@ public class Verify
 					}
 
 					System.Net.IPAddress ipA = aRecord.IPAddress;
-					foreach (int smtpPort in _smtpPorts) {
+					foreach (int smtpPort in _smtpPorts.Keys) {
 						if (await HasServer (ipA, smtpPort, timeout)) {
 							resp.UnderlyingGoodDomain = aRecord.Name.ToString ();
 							serverVerified = true;
@@ -432,9 +433,7 @@ public class Verify
 			return;
 		}
 
-		if (!_dnsIps.Contains (dnsIp)) {
-			_dnsIps.Add (dnsIp);
-		}
+		_dnsIps.TryAdd (dnsIp, 0);
 	}
 
 	public static void AddBypassDomain (string bypassDomain) {
@@ -457,8 +456,8 @@ public class Verify
 		}
 	}
 
-	private static readonly List<string> _dnsIps = [];
-	private static readonly Dictionary<string, int> _bypassDomains = []; // just using dictionary for speed if this grows
-	private static readonly List<int> _smtpPorts = [];
+	private static readonly ConcurrentDictionary<string, byte> _dnsIps = new ();
+	private static readonly ConcurrentDictionary<string, int> _bypassDomains = new ();
+	private static readonly ConcurrentDictionary<int, byte> _smtpPorts = new ();
 	public static bool WriteDebugMessages { get; set; }
 }
