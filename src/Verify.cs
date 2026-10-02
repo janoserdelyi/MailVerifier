@@ -403,7 +403,7 @@ public class Verify
 				Console.WriteLine ("waiting " + waitrand.ToString (System.Globalization.CultureInfo.InvariantCulture) + "ms to read bytes from server");
 			}
 
-			System.Threading.Thread.Sleep (waitrand);
+			await Task.Delay (waitrand);
 
 			try {
 				int recv = await ns.ReadAsync (data.AsMemory ());
